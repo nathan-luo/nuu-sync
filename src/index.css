@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-light: #ffffff;
+  --color-dark: #000000;
+}
+
+.accent-text {
+  @apply text-gray-600;
+}
+
+body {
+  font-family:
+    "Inter Variable",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    "Noto Color Emoji";
+  color: var(--color-dark);
+  background: var(--color-light);
+}
+
+/* Auth styles */
+.auth-input-field {
+  @apply w-full px-4 py-3 rounded bg-white border border-gray-300 focus:border-black focus:ring-1 focus:ring-black outline-none transition-shadow;
+}
+
+.auth-button {
+  @apply w-full px-4 py-3 rounded bg-black text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Custom styles for NUU Sync */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Highlight styles */
+.highlight-selected {
+  @apply ring-2 ring-black;
+}
+
+/* Prose styles for markdown content */
+.prose {
+  @apply text-gray-900;
+}
+
+.prose h1 {
+  @apply text-3xl font-bold mt-8 mb-6 text-black;
+}
+
+.prose h2 {
+  @apply text-2xl font-semibold mt-8 mb-4 text-black;
+}
+
+.prose h3 {
+  @apply text-xl font-semibold mt-6 mb-3 text-black;
+}
+
+.prose p {
+  @apply mb-4 leading-relaxed;
+}
+
+.prose ul {
+  @apply mb-4;
+}
+
+.prose li {
+  @apply mb-1;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic my-4 text-gray-700;
+}
+
+.prose code {
+  @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono;
+}
+
+.prose pre {
+  @apply bg-gray-100 p-4 rounded my-4 overflow-x-auto;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0;
+}
+
+.prose a {
+  @apply text-black underline hover:text-gray-700;
+}
+
+.prose strong {
+  @apply font-semibold text-black;
+}
+
+.prose em {
+  @apply italic;
+}
