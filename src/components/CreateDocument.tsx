@@ -1,7 +1,9 @@
+"use client";
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface CreateDocumentProps {
   onBack: () => void;
@@ -12,6 +14,7 @@ export function CreateDocument({ onBack }: CreateDocumentProps) {
   const [content, setContent] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const createDocument = useMutation(api.documents.createDocument);
 
@@ -24,13 +27,13 @@ export function CreateDocument({ onBack }: CreateDocumentProps) {
 
     setIsLoading(true);
     try {
-      await createDocument({
+      const documentId = await createDocument({
         title: title.trim(),
         content: content.trim(),
         isPublic,
       });
       toast.success("Document created successfully!");
-      onBack();
+      router.push(`/document/${documentId}`);
     } catch (error) {
       toast.error("Failed to create document");
       console.error(error);

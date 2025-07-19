@@ -1,18 +1,19 @@
 import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
     ignores: [
+      ".next",
+      "out",
       "dist",
-      "eslint.config.js",
+      "eslint.config.js", 
       "convex/_generated",
       "postcss.config.js",
       "tailwind.config.js",
-      "vite.config.ts",
+      "next.config.js",
     ],
   },
   {
@@ -29,22 +30,16 @@ export default tseslint.config(
       },
       parserOptions: {
         project: [
-          "./tsconfig.node.json",
-          "./tsconfig.app.json",
+          "./tsconfig.json",
           "./convex/tsconfig.json",
         ],
       },
     },
     plugins: {
       "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
       // All of these overrides ease getting into
       // TypeScript, and can be removed for stricter
       // linting down the line.
