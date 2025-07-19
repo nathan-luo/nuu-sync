@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { Id } from "./_generated/dataModel";
 
 async function getLoggedInUser(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -25,6 +26,22 @@ export const createComment = mutation({
   handler: async (ctx, args) => {
     const userId = await getLoggedInUser(ctx);
     
+    // Check if user has access to the document
+    const document = await ctx.db.get(args.documentId);
+    if (!document) {
+      throw new Error("Document not found");
+    }
+    
+    // Extract mentions from content
+    const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
+    const extractedMentions: string[] = [];
+    let match;
+    while ((match = mentionRegex.exec(args.content)) !== null) {
+      if (match[2]) {
+        extractedMentions.push(match[2]);
+      }
+    }
+    
     return await ctx.db.insert("comments", {
       documentId: args.documentId,
       highlightId: args.highlightId,
@@ -46,6 +63,9 @@ export const getDocumentComments = query({
       .order("asc")
       .collect();
 
+    // Get current user for permission checks
+    const currentUserId = await getAuthUserId(ctx);
+
     return await Promise.all(
       comments.map(async (comment) => {
         const user = await ctx.db.get(comment.userId);
@@ -55,14 +75,26 @@ export const getDocumentComments = query({
             return {
               id: mentionId,
               name: mentionedUser?.name || mentionedUser?.email || "Unknown",
+              email: mentionedUser?.email,
             };
           })
         );
 
+        // Count replies
+        const replies = await ctx.db
+          .query("comments")
+          .withIndex("by_parent", (q) => q.eq("parentCommentId", comment._id))
+          .collect();
+
         return {
           ...comment,
           userName: user?.name || user?.email || "Unknown",
+          userEmail: user?.email,
           mentionedUsers,
+          replyCount: replies.length,
+          canEdit: currentUserId === comment.userId,
+          canDelete: currentUserId === comment.userId,
+          isEdited: comment._creationTime !== (comment as any).lastEditedTime,
         };
       })
     );
@@ -94,6 +126,7 @@ export const updateComment = mutation({
   args: {
     commentId: v.id("comments"),
     content: v.string(),
+    mentions: v.optional(v.array(v.id("users"))),
   },
   handler: async (ctx, args) => {
     const userId = await getLoggedInUser(ctx);
@@ -103,7 +136,16 @@ export const updateComment = mutation({
       throw new Error("Not authorized to edit this comment");
     }
 
-    await ctx.db.patch(args.commentId, { content: args.content });
+    const updates: any = {
+      content: args.content,
+      lastEditedTime: Date.now(),
+    };
+    
+    if (args.mentions !== undefined) {
+      updates.mentions = args.mentions;
+    }
+
+    await ctx.db.patch(args.commentId, updates);
   },
 });
 
@@ -117,16 +159,55 @@ export const deleteComment = mutation({
       throw new Error("Not authorized to delete this comment");
     }
 
-    // Delete all replies to this comment
-    const replies = await ctx.db
-      .query("comments")
-      .withIndex("by_parent", (q) => q.eq("parentCommentId", args.commentId))
-      .collect();
+    // Delete all replies recursively
+    async function deleteCommentAndReplies(commentId: any) {
+      const replies = await ctx.db
+        .query("comments")
+        .withIndex("by_parent", (q) => q.eq("parentCommentId", commentId))
+        .collect();
 
-    for (const reply of replies) {
-      await ctx.db.delete(reply._id);
+      for (const reply of replies) {
+        await deleteCommentAndReplies(reply._id);
+      }
+
+      await ctx.db.delete(commentId);
     }
 
-    await ctx.db.delete(args.commentId);
+    await deleteCommentAndReplies(args.commentId);
+  },
+});
+
+// Get all users in the document for mentions
+export const getDocumentUsers = query({
+  args: { documentId: v.id("documents") },
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.documentId);
+    if (!document) return [];
+    
+    // Get all unique user IDs from document collaborators and comment authors
+    const userIds = new Set<string>([document.createdBy, ...document.collaborators]);
+    
+    // Get all comment authors
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_document", (q) => q.eq("documentId", args.documentId))
+      .collect();
+    
+    comments.forEach(comment => userIds.add(comment.userId));
+    
+    // Get user details
+    const users = await Promise.all(
+      Array.from(userIds).map(async (userId) => {
+        const user = await ctx.db.get(userId as Id<"users">);
+        if (!user) return null;
+        return {
+          id: user._id,
+          name: user.name || user.email || "Unknown",
+          email: user.email,
+        };
+      })
+    );
+    
+    return users.filter(Boolean);
   },
 });

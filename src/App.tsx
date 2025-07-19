@@ -25,36 +25,37 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-200 h-16 flex justify-between items-center px-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">NUU Sync</h1>
-          <span className="text-sm text-gray-500">by NUU Cognition</span>
-        </div>
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="h-16 flex justify-between items-center">
+            <h1 className="text-xl font-bold">NUU Sync</h1>
         <Authenticated>
           <div className="flex items-center gap-4">
             {currentView !== "list" && (
               <button
                 onClick={goBack}
-                className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                className="btn-secondary flex items-center gap-2"
               >
-                ← Back to Documents
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Library
               </button>
             )}
             <SignOutButton />
           </div>
         </Authenticated>
+          </div>
+        </div>
       </header>
 
       <main className="flex-1">
         <Unauthenticated>
-          <div className="flex items-center justify-center min-h-[80vh]">
-            <div className="w-full max-w-md mx-auto p-8">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold mb-4">Welcome to NUU Sync</h2>
-                <p className="text-gray-600 mb-2">Collaborative Deep Reading Platform</p>
-                <p className="text-sm text-gray-500">
-                  Highlight, comment, and collaborate on documents with branching discussions
-                </p>
+          <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+            <div className="w-full max-w-sm mx-auto">
+              <div className="mb-12">
+                <h1 className="text-5xl font-bold text-center mb-3">NUU Sync</h1>
+                <p className="text-center text-gray-600">Deep reading, together</p>
               </div>
               <SignInForm />
             </div>
@@ -91,7 +92,11 @@ function Content({
   if (loggedInUser === undefined) {
     return (
       <div className="flex justify-center items-center min-h-[80vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+        <div className="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
       </div>
     );
   }

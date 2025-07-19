@@ -69,15 +69,15 @@ function example() {
 Replace this content with your own markdown document.`;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-6">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-2">Create New Document</h2>
-        <p className="text-gray-600">Create a markdown document for collaborative reading</p>
+        <h2 className="text-3xl font-bold mb-2">Create New Document</h2>
+        <p className="text-gray-600">Write or paste your content in markdown format for collaborative deep reading</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="card p-6">
+          <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
             Document Title
           </label>
           <input
@@ -85,58 +85,97 @@ Replace this content with your own markdown document.`;
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-shadow"
-            placeholder="Enter document title..."
+            className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none transition-all"
+            placeholder="Enter a descriptive title for your document..."
             required
           />
         </div>
 
-        <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-            Content (Markdown)
-          </label>
+        <div className="card p-6">
+          <div className="flex justify-between items-center mb-2">
+            <label htmlFor="content" className="block text-sm font-semibold text-gray-700">
+              Content (Markdown)
+            </label>
+            <div className="flex items-center gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setContent(exampleMarkdown)}
+                className="text-black hover:underline font-medium text-xs"
+              >
+                Use Example
+              </button>
+            </div>
+          </div>
           <textarea
             id="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={20}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-shadow font-mono text-sm"
+            className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none transition-all font-mono text-sm"
             placeholder={exampleMarkdown}
             required
           />
-          <p className="text-xs text-gray-500 mt-2">
-            Use Markdown syntax for formatting. This content will be rendered and available for highlighting and comments.
-          </p>
+          <div className="mt-3 flex items-start gap-2">
+            <svg className="w-4 h-4 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-xs text-gray-500">
+              Your content will be rendered with full markdown support. Users can highlight text and add comments to create branching discussions.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="isPublic"
-            checked={isPublic}
-            onChange={(e) => setIsPublic(e.target.checked)}
-            className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
-          />
-          <label htmlFor="isPublic" className="ml-2 block text-sm text-gray-700">
-            Make this document public (anyone can view and comment)
-          </label>
+        <div className="card p-6">
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="isPublic"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+              className="h-5 w-5 text-black focus:ring-black border-gray-300 rounded mt-0.5"
+            />
+            <div>
+              <label htmlFor="isPublic" className="block text-sm font-medium text-gray-700 cursor-pointer">
+                Make this document public
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Public documents can be viewed and commented on by anyone with the link
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex justify-end gap-4">
           <button
             type="button"
             onClick={onBack}
-            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="btn-secondary"
             disabled={isLoading}
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={isLoading}
-            className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading || !title.trim() || !content.trim()}
+            className="btn-primary flex items-center gap-2"
           >
-            {isLoading ? "Creating..." : "Create Document"}
+            {isLoading ? (
+              <>
+                <div className="loading-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                Creating...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Create Document
+              </>
+            )}
           </button>
         </div>
       </form>
