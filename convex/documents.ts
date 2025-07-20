@@ -181,3 +181,33 @@ export const shareDocument = mutation({
     }
   },
 });
+
+export const getDocumentShares = query({
+  args: { documentId: v.id("documents") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const document = await ctx.db.get(args.documentId);
+    if (!document || document.createdBy !== userId) {
+      return [];
+    }
+
+    const shares = await ctx.db
+      .query("documentShares")
+      .withIndex("by_document", (q) => q.eq("documentId", args.documentId))
+      .collect();
+
+    return await Promise.all(
+      shares.map(async (share) => {
+        const user = await ctx.db.get(share.sharedWith);
+        return {
+          _id: share._id,
+          userName: user?.name || "Unknown",
+          userEmail: user?.email || "Unknown",
+          permission: share.permission,
+        };
+      })
+    );
+  },
+});

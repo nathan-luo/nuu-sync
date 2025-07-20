@@ -78,7 +78,7 @@ Replace this content with your own markdown document.`;
         <p className="text-gray-600">Write or paste your content in markdown format for collaborative deep reading</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
         <div className="card p-6">
           <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
             Document Title

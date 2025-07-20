@@ -4,6 +4,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { toast } from "sonner";
+import { HighlightOverlay } from "./HighlightOverlay";
 
 interface Highlight {
   _id: Id<"highlights">;
@@ -35,7 +36,16 @@ export function MarkdownRenderer({
   const [showCommentDialog, setShowCommentDialog] = useState(false);
   const [commentContent, setCommentContent] = useState("");
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const [selectedColor, setSelectedColor] = useState("#ffeb3b");
   const contentRef = useRef<HTMLDivElement>(null);
+  
+  const highlightColors = [
+    { name: "Yellow", value: "#ffeb3b" },
+    { name: "Green", value: "#b2ff59" },
+    { name: "Blue", value: "#82b1ff" },
+    { name: "Pink", value: "#ff80ab" },
+    { name: "Orange", value: "#ffab40" },
+  ];
   
   const createHighlightWithComment = useMutation(api.highlights.createHighlightWithComment);
   const deleteHighlight = useMutation(api.highlights.deleteHighlight);
@@ -114,12 +124,20 @@ export function MarkdownRenderer({
       return;
     }
 
-    // Calculate text offsets in the original content
-    const preSelectionRange = range.cloneRange();
-    preSelectionRange.selectNodeContents(contentRef.current!);
-    preSelectionRange.setEnd(range.startContainer, range.startOffset);
-    const start = preSelectionRange.toString().length;
+    // Get the actual text content to calculate proper offsets
+    const textContent = contentRef.current?.textContent || '';
+    
+    // Create a range that spans from start of content to start of selection
+    const preRange = document.createRange();
+    if (!contentRef.current) return;
+    preRange.selectNodeContents(contentRef.current);
+    preRange.setEnd(range.startContainer, range.startOffset);
+    
+    // Calculate character offsets based on text content
+    const start = preRange.toString().length;
     const end = start + text.length;
+
+    console.log('Selection:', { text, start, end, totalLength: textContent.length });
 
     setSelectedText(text);
     setSelectionRange({ start, end });
@@ -142,7 +160,7 @@ export function MarkdownRenderer({
         startOffset: selectionRange.start,
         endOffset: selectionRange.end,
         selectedText,
-        color: "#ffeb3b",
+        color: selectedColor,
         commentContent: commentContent.trim(),
       });
       toast.success("Highlight created!");
@@ -174,11 +192,9 @@ export function MarkdownRenderer({
     window.getSelection()?.removeAllRanges();
   };
 
-  // Apply highlights to rendered content - simplified version
-  const applyHighlights = (html: string) => {
-    // For now, return HTML without highlights to fix white screen
-    // TODO: Implement proper highlight rendering
-    return html;
+  // Handle highlight selection
+  const handleHighlightClick = (highlightId: Id<"highlights">) => {
+    onHighlightSelect(highlightId);
   };
 
   useEffect(() => {
@@ -205,25 +221,17 @@ export function MarkdownRenderer({
         <div
           ref={contentRef}
           className="max-w-none leading-relaxed text-gray-900"
-          style={{ minHeight: '100px', padding: '1rem' }}
+          style={{ minHeight: '100px', padding: '1rem', position: 'relative' }}
           dangerouslySetInnerHTML={{ __html: renderedContent }}
           onMouseUp={handleTextSelection}
-        onClick={(e) => {
-          const target = e.target as HTMLElement;
-          const highlightId = target.getAttribute('data-highlight-id');
-          if (highlightId) {
-            onHighlightSelect(highlightId as Id<"highlights">);
-          }
-        }}
-        onContextMenu={(e) => {
-          const target = e.target as HTMLElement;
-          const highlightId = target.getAttribute('data-highlight-id');
-          if (highlightId) {
-            e.preventDefault();
-            handleDeleteHighlight(highlightId as Id<"highlights">);
-          }
-        }}
-      />
+        />
+        <HighlightOverlay
+          highlights={highlights}
+          contentRef={contentRef}
+          onHighlightClick={handleHighlightClick}
+          onHighlightDelete={(id) => void handleDeleteHighlight(id)}
+          selectedHighlight={selectedHighlight}
+        />
       </div>
 
       {/* Highlight menu */}
@@ -231,12 +239,26 @@ export function MarkdownRenderer({
         <div
           className="highlight-menu fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4"
           style={{
-            left: menuPosition.x - 100,
-            top: menuPosition.y - 80,
+            left: menuPosition.x - 120,
+            top: menuPosition.y - 140,
+            width: '240px',
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="text-sm font-medium mb-3">Add highlight</div>
+          <div className="text-sm font-medium mb-3">Choose highlight color</div>
+          <div className="flex gap-2 mb-4">
+            {highlightColors.map((color) => (
+              <button
+                key={color.value}
+                onClick={() => setSelectedColor(color.value)}
+                className={`w-8 h-8 rounded-full border-2 transition-all ${
+                  selectedColor === color.value ? 'border-gray-800 scale-110' : 'border-gray-300'
+                }`}
+                style={{ backgroundColor: color.value }}
+                title={color.name}
+              />
+            ))}
+          </div>
           <button
             onClick={() => {
               setShowHighlightMenu(false);
@@ -244,7 +266,7 @@ export function MarkdownRenderer({
             }}
             className="w-full px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors text-sm"
           >
-            Highlight & Comment
+            Add Comment
           </button>
           <button
             onClick={cancelHighlight}
@@ -289,7 +311,7 @@ export function MarkdownRenderer({
               Cancel
             </button>
             <button
-              onClick={handleCreateHighlight}
+              onClick={() => void handleCreateHighlight()}
               disabled={!commentContent.trim()}
               className="px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
             >

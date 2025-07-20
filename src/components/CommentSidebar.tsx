@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -58,7 +58,7 @@ export function CommentSidebar({
   const createComment = useMutation(api.comments.createComment);
   const updateComment = useMutation(api.comments.updateComment);
   const deleteComment = useMutation(api.comments.deleteComment);
-  const loggedInUser = useQuery(api.auth.loggedInUser);
+  const _loggedInUser = useQuery(api.auth.loggedInUser);
   const documentUsers = useQuery(api.comments.getDocumentUsers, { documentId });
 
   // Filter users for mentions
@@ -347,7 +347,7 @@ export function CommentSidebar({
                       </svg>
                     </button>
                     <button
-                      onClick={() => handleDeleteComment(comment._id)}
+                      onClick={() => void handleDeleteComment(comment._id)}
                       className="btn-icon p-1 hover:text-red-600"
                       title="Delete"
                     >
@@ -370,7 +370,7 @@ export function CommentSidebar({
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleEditComment(comment._id)}
+                      onClick={() => void handleEditComment(comment._id)}
                       disabled={!editContent.trim()}
                       className="btn-primary text-xs px-3 py-1"
                     >
@@ -426,7 +426,7 @@ export function CommentSidebar({
             <MentionsDropdown isReply />
             <div className="flex gap-2 mt-2">
               <button
-                onClick={() => handleReply(comment._id)}
+                onClick={() => void handleReply(comment._id)}
                 disabled={!replyContent.trim()}
                 className="btn-primary text-xs px-3 py-1"
               >
@@ -499,7 +499,7 @@ export function CommentSidebar({
               Use @ to mention users
             </div>
             <button
-              onClick={handleCreateComment}
+              onClick={() => void handleCreateComment()}
               disabled={!newComment.trim()}
               className="btn-primary text-sm"
             >
